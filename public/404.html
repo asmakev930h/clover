@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Page Not Found - Clover</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- RESET & CORE STYLES --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        body {
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #0f0f1a;
+            overflow: hidden;
+            position: relative;
+            touch-action: none; 
+        }
+
+        /* --- AURORA BACKGROUND --- */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, #4F46E5 0%, #7C3AED 30%, #EC4899 60%, #0f0f1a 80%);
+            background-size: 200% 200%;
+            animation: auroraMove 15s ease infinite alternate;
+            opacity: 0.5;
+            z-index: -1;
+            filter: blur(80px);
+        }
+
+        @keyframes auroraMove {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-10%, 5%) rotate(10deg); }
+            100% { transform: translate(5%, -10%) rotate(-5deg); }
+        }
+
+        /* --- CARD STYLING --- */
+        .login-card-container {
+            perspective: 1500px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 60px 30px;
+            border-radius: 40px; 
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05),
+                        0 20px 40px rgba(0, 0, 0, 0.3);
+            color: #fff;
+            text-align: center;
+            transition: transform 0.1s ease-out;
+            transform-style: preserve-3d;
+            will-change: transform;
+            position: relative;
+        }
+
+        /* --- NEW PREMIUM BRAND STYLING --- */
+        .brand-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 35px; /* Spacing below logo */
+            padding-top: 10px;
+        }
+
+        /* The glowing aura behind the logo */
+        .brand-aura {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 140px;
+            height: 60px;
+            background: radial-gradient(ellipse at center, rgba(167, 139, 250, 0.3) 0%, rgba(0,0,0,0) 70%);
+            filter: blur(15px);
+            z-index: 0;
+            pointer-events: none;
+            animation: pulseGlow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.9); }
+            100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        /* The Text and Icon */
+        .brand-logo {
+            position: relative;
+            z-index: 1;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+
+            /* Premium Gradient Text */
+            background: linear-gradient(135deg, #ffffff 10%, #e9d5ff 60%, #c4b5fd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            
+            /* Neon Drop Shadow (creates the floating glass feel) */
+            filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.5));
+        }
+
+        /* The Icon specific styles */
+        .brand-icon {
+            font-size: 24px;
+            /* Gradient for icon */
+            background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            
+            transform: rotate(-10deg);
+            filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.6));
+        }
+
+        /* --- 404 SPECIFIC STYLES --- */
+        .error-code {
+            font-size: 100px;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #4F46E5, #EC4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: float 4s ease-in-out infinite;
+            text-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .login-card h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .login-card p.subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        /* New class for the countdown text */
+        .redirect-text {
+            display: block;
+            margin-top: 15px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* --- BUTTON --- */
+        .home-btn {
+            display: inline-block;
+            text-decoration: none;
+            width: 100%;
+            padding: 16px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: linear-gradient(135deg, #4F46E5, #EC4899);
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(124, 58, 237, 0.5);
+        }
+
+        .home-btn i {
+            margin-right: 8px;
+        }
+
+        @media (max-width: 480px) {
+            .error-code { font-size: 80px; }
+            .login-card { padding: 40px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card-container">
+        <div class="login-card" id="tiltCard">
+            
+            <div class="brand-wrapper">
+                <div class="brand-aura"></div>
+                <div class="brand-logo">
+                    <i class="fa-solid fa-clover brand-icon"></i>
+                    CLOVER
+                </div>
+            </div>
+
+            <div class="error-code">404</div>
+            
+            <h2>Oops! Page Not Found</h2>
+            <p class="subtitle">
+                The page you are looking for might have been removed or is temporarily unavailable.
+                <span class="redirect-text">Redirecting to login in <span id="countdown">5</span> seconds...</span>
+            </p>
+
+            <a href="home.html" class="home-btn">
+                <i class="fa-solid fa-house"></i> Go to Homepage Now
+            </a>
+
+        </div>
+    </div>
+
+    <script>
+        /* --- LOGIC --- */
+
+        // 1. AUTO REDIRECT LOGIC
+        let timeLeft = 5;
+        const countdownEl = document.getElementById('countdown');
+
+        const timer = setInterval(() => {
+            timeLeft--;
+            if (countdownEl) countdownEl.innerText = timeLeft;
+
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                window.location.href = "login.html";
+            }
+        }, 1000);
+
+        // 2. TILT EFFECT
+        const card = document.getElementById('tiltCard');
+        const container = document.querySelector('.login-card-container');
+
+        if (window.matchMedia("(pointer: fine)").matches) {
+            container.addEventListener('mousemove', (e) => {
+                const rect = container.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                
+                const multiple = 15; 
+                const rotateX = (y / rect.height) * -multiple;
+                const rotateY = (x / rect.width) * multiple;
+
+                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+
+            container.addEventListener('mouseleave', () => {
+                card.style.transform = `rotateX(0deg) rotateY(0deg)`;
+            });
+        }
+    </script>
+</body>
+</html>

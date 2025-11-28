@@ -1,0 +1,874 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <title>Chat - Clover</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+        /* --- RESET & CORE STYLES --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden; 
+            position: fixed;  
+        }
+
+        body { 
+            background-color: #0f0f1a; 
+            color: #fff;
+            display: flex;
+            flex-direction: column; 
+        }
+        
+        body::before {
+            content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, #4F46E5 0%, #7C3AED 30%, #EC4899 60%, #0f0f1a 80%);
+            background-size: 200% 200%; animation: auroraMove 20s ease infinite alternate; opacity: 0.4; z-index: -2; filter: blur(80px); pointer-events: none;
+        }
+        @keyframes auroraMove { 0% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(-5%, 5%) rotate(5deg); } 100% { transform: translate(5%, -5%) rotate(-5deg); } }
+
+        /* --- HEADER --- */
+        header { 
+            height: 65px; 
+            flex-shrink: 0; 
+            padding: 0 15px; 
+            display: flex; 
+            align-items: center; 
+            background: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(10px); 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+            z-index: 50;
+        }
+        .back-btn { font-size: 20px; color: #fff; margin-right: 10px; cursor: pointer; padding: 10px; margin-left: -5px; }
+        
+        .header-avatar {
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            margin-right: 12px;
+            background: linear-gradient(135deg, #10B981, #3B82F6);
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-weight: 700; 
+            font-size: 16px;
+            background-size: cover; 
+            background-position: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .chat-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .chat-name { font-weight: 700; font-size: 16px; line-height: 1.2; display: flex; align-items: center; gap: 5px; }
+        .verified-badge { color: #38bdf8; font-size: 14px; margin-left: 4px; filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.5)); }
+        .chat-status { font-size: 11px; color: rgba(255, 255, 255, 0.6); line-height: 1.2; }
+
+        /* --- CHAT CONTAINER --- */
+        #chat-container { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            scroll-behavior: smooth; 
+            -webkit-overflow-scrolling: touch; 
+        }
+        
+        .message { max-width: 75%; padding: 12px 16px; border-radius: 20px; font-size: 14px; position: relative; animation: popIn 0.3s ease; word-wrap: break-word; }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .message.sent { align-self: flex-end; background: linear-gradient(135deg, #4F46E5, #EC4899); color: #fff; border-bottom-right-radius: 5px; box-shadow: 0 5px 15px rgba(236, 72, 153, 0.3); }
+        .message.received { align-self: flex-start; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.1); color: #e5e7eb; border-bottom-left-radius: 5px; }
+        
+        .message-time { 
+            font-size: 9px; 
+            opacity: 0.7; 
+            margin-top: 5px; 
+            text-align: right; 
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+        .msg-tick { font-size: 10px; transition: color 0.3s; }
+        .msg-tick.read { color: #34d399; } /* Green for read */
+        .message-caption { margin-top: 5px; display: block; }
+
+        /* --- MEDIA STYLES --- */
+        .media-content { max-width: 100%; border-radius: 12px; display: block; cursor: pointer; }
+        .file-attachment { 
+            display: flex; align-items: center; gap: 10px; 
+            background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; 
+            text-decoration: none; color: inherit; font-size: 13px;
+        }
+        .file-attachment i { font-size: 20px; color: #c4b5fd; }
+        .file-attachment:hover { background: rgba(0,0,0,0.3); }
+
+        /* --- PREVIEW TRAY --- */
+        #previewContainer {
+            padding: 12px 15px;
+            background: rgba(20, 20, 35, 0.98);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: space-between;
+            animation: slideUp 0.2s ease-out;
+            flex-shrink: 0;
+            z-index: 51;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        #previewContainer.active { display: flex; }
+        
+        .preview-content { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            overflow-x: auto;
+            flex: 1;
+            padding: 5px 0;
+            margin-right: 10px;
+        }
+        .preview-content::-webkit-scrollbar { display: none; }
+
+        .preview-item { position: relative; flex-shrink: 0; }
+        
+        .preview-thumb { height: 50px; width: 50px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.2); display: block; }
+        
+        .preview-item-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 18px;
+            height: 18px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            z-index: 10;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .preview-file-icon { 
+            height: 50px; width: 50px; border-radius: 8px; 
+            background: rgba(255,255,255,0.1); display: flex; 
+            align-items: center; justify-content: center; font-size: 24px; color: #c4b5fd;
+        }
+        .preview-name { font-size: 12px; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+        
+        .close-preview { 
+            background: rgba(255,255,255,0.1); width: 30px; height: 30px; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #ef4444; transition: 0.2s;
+        }
+        .close-preview:hover { background: rgba(239,68,68,0.2); }
+
+        /* --- MEDIA PLACEHOLDER & SAVE --- */
+        .media-placeholder {
+            width: 200px;
+            height: 120px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 5px;
+        }
+        .media-placeholder:hover { background: rgba(0, 0, 0, 0.3); }
+        .placeholder-icon { font-size: 24px; margin-bottom: 5px; color: #c4b5fd; }
+        .placeholder-text { font-size: 11px; opacity: 0.7; }
+
+        /* --- CUSTOM AUDIO PLAYER --- */
+        .custom-audio-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 15px;
+            min-width: 200px;
+            max-width: 100%;
+            margin-bottom: 5px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .audio-play-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10B981, #3B82F6);
+            border: none;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .audio-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+        
+        .audio-progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+        
+        .audio-progress-bar {
+            height: 100%;
+            background: #c4b5fd;
+            width: 0%;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .audio-time { font-size: 10px; opacity: 0.7; font-family: monospace; }
+
+        .save-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            font-size: 11px;
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .save-option:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* --- INPUT AREA --- */
+        .input-area { 
+            min-height: 70px; 
+            flex-shrink: 0; 
+            padding: 10px 15px; 
+            padding-bottom: max(10px, env(safe-area-inset-bottom)); 
+            background: rgba(20, 20, 35, 0.95); 
+            backdrop-filter: blur(20px); 
+            /* No border top here if preview is active, but keep for default */
+            border-top: 1px solid rgba(255, 255, 255, 0.1); 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            z-index: 50;
+        }
+
+        .message-input { 
+            flex: 1; 
+            min-width: 0;
+            padding: 12px 20px; 
+            border-radius: 50px; 
+            background: rgba(255, 255, 255, 0.1); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            color: #fff; 
+            outline: none; 
+            font-size: 16px; 
+        }
+        .message-input:focus { border-color: #c4b5fd; background: rgba(255, 255, 255, 0.15); }
+        
+        input[type="search"]::-webkit-search-decoration,
+        input[type="search"]::-webkit-search-cancel-button,
+        input[type="search"]::-webkit-search-results-button,
+        input[type="search"]::-webkit-search-results-decoration {
+            -webkit-appearance: none;
+        }
+
+        .action-btn { 
+            width: 45px; height: 45px; border-radius: 50%; 
+            background: linear-gradient(135deg, #10B981, #3B82F6); 
+            display: flex; align-items: center; justify-content: center; 
+            color: #fff; font-size: 18px; border: none; cursor: pointer; 
+            flex-shrink: 0; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s ease;
+        }
+        .action-btn:active { transform: scale(0.9); }
+        
+        /* Loading Overlay */
+        #loadingOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 200;
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column; color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        #loadingOverlay.active { opacity: 1; pointer-events: all; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <i class="fa-solid fa-arrow-left back-btn" onclick="window.location.href='/home#chats'"></i>
+        <div id="headerAvatar" class="header-avatar"></div>
+        <div class="chat-info">
+            <div class="chat-name" id="chatName">User</div>
+            <div class="chat-status" id="chatIdDisplay">Connecting...</div>
+        </div>
+    </header>
+
+    <div id="chat-container">
+        <div style="text-align: center; font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 20px;">Encrypted connection established</div>
+    </div>
+
+    <div id="loadingOverlay">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 40px; margin-bottom: 10px;"></i>
+        <p>Uploading file...</p>
+    </div>
+
+    <div id="previewContainer">
+        <div class="preview-content" id="previewContent">
+            </div>
+        <div class="close-preview" onclick="cancelFile()">
+            <i class="fa-solid fa-xmark"></i>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input type="file" id="fileInput" style="display: none;" multiple>
+
+        <input 
+            type="search" 
+            id="msgInput" 
+            class="message-input" 
+            placeholder="Type a message..." 
+            autocomplete="off" 
+            spellcheck="false"
+            aria-autocomplete="none"
+        >
+        
+        <button id="actionBtn" class="action-btn">
+            <i class="fa-solid fa-plus" id="btnIcon"></i>
+        </button>
+    </div>
+
+    <script>
+        const socket = io();
+        const urlParams = new URLSearchParams(window.location.search);
+        const otherProfileId = urlParams.get('id');
+        const myProfileId = localStorage.getItem('userProfileId');
+        
+        // Validation
+        if (!myProfileId || !otherProfileId) {
+            alert("Invalid Chat Link");
+            window.location.href = '/home';
+        }
+
+        // UI Elements
+        const chatNameEl = document.getElementById('chatName');
+        const chatIdDisplayEl = document.getElementById('chatIdDisplay');
+        const avatarEl = document.getElementById('headerAvatar');
+
+        // Set Loading State
+        chatNameEl.innerText = "Loading...";
+        chatIdDisplayEl.innerText = "@...";
+        avatarEl.style.backgroundImage = 'none';
+        avatarEl.innerText = "";
+
+        // --- SECURE FETCH USER INFO ---
+        async function fetchUserInfo() {
+            try {
+                const response = await fetch(`/api/user-info?profileId=${otherProfileId}`);
+                if (!response.ok) throw new Error("User not found");
+                
+                const user = await response.json();
+
+                // Update UI with authoritative data
+                chatNameEl.innerHTML = `
+                    ${user.fullname} 
+                    ${user.VerifiedBarge ? '<i class="fa-solid fa-circle-check verified-badge"></i>' : ''}
+                `;
+                chatIdDisplayEl.innerText = '@' + user.username;
+
+                if (user.profileImage) {
+                    avatarEl.style.backgroundImage = `url('${user.profileImage}')`;
+                    avatarEl.innerText = '';
+                } else {
+                    avatarEl.style.backgroundImage = 'none';
+                    avatarEl.innerText = user.fullname.charAt(0).toUpperCase();
+                }
+            } catch (error) {
+                console.error("Failed to fetch user info", error);
+                chatNameEl.innerText = "Unknown User";
+            }
+        }
+        
+        // Call immediately
+        fetchUserInfo();
+
+        const chatContainer = document.getElementById('chat-container');
+        const msgInput = document.getElementById('msgInput');
+        const actionBtn = document.getElementById('actionBtn');
+        const btnIcon = document.getElementById('btnIcon');
+        const fileInput = document.getElementById('fileInput');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewContent = document.getElementById('previewContent');
+
+        if (!myProfileId || !otherProfileId) {
+            alert("Chat Error: Missing user details.");
+            window.location.href = '/home';
+        }
+
+        // --- STAGING LOGIC ---
+        let stagedFiles = [];
+
+        function updateButtonState() {
+            // If there is text OR files staged, show the "Send Plane"
+            if (msgInput.value.trim().length > 0 || stagedFiles.length > 0) {
+                btnIcon.className = "fa-solid fa-paper-plane";
+            } else {
+                btnIcon.className = "fa-solid fa-plus";
+            }
+        }
+
+        msgInput.addEventListener('input', updateButtonState);
+
+        // --- ACTION HANDLER ---
+        actionBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // If we have files staged OR text typed, we SEND
+            if (stagedFiles.length > 0 || msgInput.value.trim().length > 0) {
+                processSend();
+            } else {
+                // Otherwise we open the file picker
+                fileInput.click();
+            }
+        });
+
+        // --- FILE SELECTION & PREVIEW ---
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            stagedFiles = [...stagedFiles, ...files];
+            renderPreviews();
+            updateButtonState();
+            
+            // Clear the actual input value so change event fires again if same file selected
+            fileInput.value = ''; 
+        });
+
+        function renderPreviews() {
+            previewContent.innerHTML = ''; // Clear prev
+
+            if (stagedFiles.length > 0) {
+                previewContainer.classList.add('active');
+            } else {
+                previewContainer.classList.remove('active');
+                return;
+            }
+
+            stagedFiles.forEach((file, index) => {
+                const itemWrapper = document.createElement('div');
+                itemWrapper.className = 'preview-item';
+
+                let mediaEl;
+                if (file.type.startsWith('image/')) {
+                    mediaEl = document.createElement('img');
+                    mediaEl.src = URL.createObjectURL(file);
+                    mediaEl.className = 'preview-thumb';
+                } else if (file.type.startsWith('video/')) {
+                    mediaEl = document.createElement('div');
+                    mediaEl.className = 'preview-file-icon';
+                    mediaEl.innerHTML = '<i class="fa-solid fa-video"></i>';
+                } else if (file.type.startsWith('audio/')) {
+                    mediaEl = document.createElement('div');
+                    mediaEl.className = 'preview-file-icon';
+                    mediaEl.innerHTML = '<i class="fa-solid fa-music"></i>';
+                } else {
+                    mediaEl = document.createElement('div');
+                    mediaEl.className = 'preview-file-icon';
+                    mediaEl.innerHTML = '<i class="fa-solid fa-file"></i>';
+                }
+
+                const removeBtn = document.createElement('div');
+                removeBtn.className = 'preview-item-remove';
+                removeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation(); // Prevent bubbling
+                    removeFile(index);
+                };
+
+                itemWrapper.appendChild(mediaEl);
+                itemWrapper.appendChild(removeBtn);
+                previewContent.appendChild(itemWrapper);
+            });
+        }
+
+        function removeFile(index) {
+            stagedFiles.splice(index, 1);
+            renderPreviews();
+            updateButtonState();
+        }
+
+        window.cancelFile = function() {
+            stagedFiles = [];
+            renderPreviews();
+            updateButtonState();
+        }
+
+        // --- SEND PROCESS ---
+        async function processSend() {
+            const text = msgInput.value.trim();
+
+            if (stagedFiles.length > 0) {
+                loadingOverlay.classList.add('active');
+                
+                // Iterate and upload each file
+                for (let i = 0; i < stagedFiles.length; i++) {
+                    const file = stagedFiles[i];
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    // Determine caption: only attach to the LAST file
+                    const caption = (i === stagedFiles.length - 1) ? text : '';
+
+                    try {
+                        const response = await fetch('/chat/upload', { method: 'POST', body: formData });
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            let type = 'file';
+                            if (file.type.startsWith('image/')) type = 'image';
+                            else if (file.type.startsWith('video/')) type = 'video';
+                            else if (file.type.startsWith('audio/')) type = 'audio';
+
+                            socket.emit('send_message', {
+                                myProfileId,
+                                otherProfileId,
+                                message: caption, 
+                                type: type,
+                                fileUrl: data.fileUrl,
+                                fileName: data.fileName || file.name
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error uploading file', error);
+                    }
+                }
+
+                loadingOverlay.classList.remove('active');
+                cancelFile(); // Reset
+                msgInput.value = '';
+
+            } else {
+                // Text Only Send
+                socket.emit('send_message', {
+                    myProfileId,
+                    otherProfileId,
+                    message: text,
+                    type: 'text'
+                });
+                msgInput.value = '';
+            }
+            updateButtonState();
+            msgInput.focus();
+        }
+
+        msgInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if(stagedFiles.length > 0 || msgInput.value.trim().length > 0) {
+                    processSend();
+                }
+            }
+        });
+
+        // --- SOCKET LOGIC ---
+        socket.emit('join_chat', { myProfileId, otherProfileId });
+
+        socket.on('load_history', (history) => {
+            history.forEach(msg => appendMessage(msg));
+            scrollToBottom();
+            markAsRead();
+        });
+
+        socket.on('receive_message', (msg) => {
+            appendMessage(msg);
+            scrollToBottom();
+            if (msg.senderId !== myProfileId) {
+                markAsRead();
+            }
+        });
+
+        function markAsRead() {
+            socket.emit('mark_read', { myProfileId, otherProfileId });
+        }
+
+        // --- FORCE DOWNLOAD HELPER ---
+        function forceDownload(url, filename) {
+            // Use backend proxy to enforce download and avoid CORS/Redirects
+            const downloadUrl = `/chat/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+            
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = downloadUrl;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // --- AUDIO HELPER ---
+        function createAudioHTML(url, id) {
+            // Unique ID for each player to manage state
+            const uid = id || 'audio_' + Math.random().toString(36).substr(2, 9);
+            return `
+                <div class="custom-audio-player" id="player_${uid}">
+                    <audio src="${url}" preload="metadata" ontimeupdate="updateProgress('${uid}')" onended="resetPlayer('${uid}')"></audio>
+                    <button class="audio-play-btn" onclick="toggleAudio('${uid}')">
+                        <i class="fa-solid fa-play"></i>
+                    </button>
+                    <div class="audio-info">
+                        <div class="audio-progress-container" onclick="seekAudio(event, '${uid}')">
+                            <div class="audio-progress-bar"></div>
+                        </div>
+                        <span class="audio-time">00:00</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- GLOBAL AUDIO CONTROLS ---
+        window.toggleAudio = function(uid) {
+            const player = document.getElementById('player_' + uid);
+            const audio = player.querySelector('audio');
+            const btnIcon = player.querySelector('.audio-play-btn i');
+            
+            // Pause all other audios
+            document.querySelectorAll('audio').forEach(a => {
+                if (a !== audio) {
+                    a.pause();
+                    a.currentTime = 0; // Optional: reset others or just pause
+                    const p = a.closest('.custom-audio-player');
+                    if(p) p.querySelector('.audio-play-btn i').className = 'fa-solid fa-play';
+                }
+            });
+
+            if (audio.paused) {
+                audio.play();
+                btnIcon.className = 'fa-solid fa-pause';
+            } else {
+                audio.pause();
+                btnIcon.className = 'fa-solid fa-play';
+            }
+        }
+
+        window.updateProgress = function(uid) {
+            const player = document.getElementById('player_' + uid);
+            const audio = player.querySelector('audio');
+            const bar = player.querySelector('.audio-progress-bar');
+            const timeDisplay = player.querySelector('.audio-time');
+            
+            const percent = (audio.currentTime / audio.duration) * 100;
+            bar.style.width = percent + '%';
+            
+            const curMins = Math.floor(audio.currentTime / 60);
+            const curSecs = Math.floor(audio.currentTime % 60);
+            const durMins = Math.floor(audio.duration / 60) || 0;
+            const durSecs = Math.floor(audio.duration % 60) || 0;
+            
+            timeDisplay.innerText = `${curMins}:${curSecs < 10 ? '0'+curSecs : curSecs} / ${durMins}:${durSecs < 10 ? '0'+durSecs : durSecs}`;
+        }
+
+        window.resetPlayer = function(uid) {
+            const player = document.getElementById('player_' + uid);
+            player.querySelector('.audio-play-btn i').className = 'fa-solid fa-play';
+            player.querySelector('.audio-progress-bar').style.width = '0%';
+        }
+
+        window.seekAudio = function(e, uid) {
+            const player = document.getElementById('player_' + uid);
+            const audio = player.querySelector('audio');
+            const container = player.querySelector('.audio-progress-container');
+            
+            const rect = container.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            const duration = audio.duration;
+            
+            audio.currentTime = (clickX / width) * duration;
+        }
+
+        // --- MEDIA LOADER ---
+        window.loadMedia = function(element, type, url, filename) {
+            // SAVE TO LOCAL STORAGE AS VIEWED
+            let viewedList = JSON.parse(localStorage.getItem('viewedMedia') || '[]');
+            if (!viewedList.includes(url)) {
+                viewedList.push(url);
+                localStorage.setItem('viewedMedia', JSON.stringify(viewedList));
+            }
+
+            // Create Save Button
+            const saveBtn = document.createElement('a');
+            saveBtn.href = '#';
+            saveBtn.className = 'save-option';
+            saveBtn.innerHTML = '<i class="fa-solid fa-download"></i> Save to Device';
+            saveBtn.onclick = (e) => {
+                e.preventDefault();
+                forceDownload(url, filename || 'media_file');
+            };
+
+            let mediaNode;
+            if (type === 'image') {
+                mediaNode = document.createElement('img');
+                mediaNode.src = url;
+                mediaNode.className = 'media-content';
+                mediaNode.alt = 'Image';
+            } else if (type === 'video') {
+                mediaNode = document.createElement('video');
+                mediaNode.src = url;
+                mediaNode.className = 'media-content';
+                mediaNode.controls = true;
+                mediaNode.autoplay = true;
+            } else if (type === 'audio') {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = createAudioHTML(url);
+                mediaNode = tempDiv.firstElementChild;
+            }
+
+            // Insert into DOM
+            element.parentNode.insertBefore(mediaNode, element);
+            element.parentNode.insertBefore(saveBtn, element);
+            
+            // Remove placeholder
+            element.remove();
+        }
+
+        // --- RENDER MESSAGES ---
+        function appendMessage(msg) {
+            const div = document.createElement('div');
+            const isMe = msg.senderId === myProfileId;
+            div.className = `message ${isMe ? 'sent' : 'received'}`;
+            
+            let contentHtml = '';
+            const safeFileName = (msg.fileName || 'file').replace(/'/g, "\\'");
+
+            // Auto-detect type from extension if generic 'file'
+            let displayType = msg.type;
+            if (displayType === 'file' && msg.fileName) {
+                const ext = msg.fileName.split('.').pop().toLowerCase();
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) displayType = 'image';
+                else if (['mp4', 'webm', 'mov', 'mkv'].includes(ext)) displayType = 'video';
+                else if (['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext)) displayType = 'audio';
+            }
+
+            // 1. Render Media if present
+            if (displayType === 'image' || displayType === 'video' || displayType === 'audio') {
+                // Check if already viewed
+                let viewedList = JSON.parse(localStorage.getItem('viewedMedia') || '[]');
+                const isViewed = viewedList.includes(msg.fileUrl);
+
+                // If I sent it OR it's already viewed, show immediately.
+                if (isMe || isViewed) {
+                     if (displayType === 'image') contentHtml += `<img src="${msg.fileUrl}" class="media-content" alt="Image">`;
+                     else if (displayType === 'video') contentHtml += `<video src="${msg.fileUrl}" class="media-content" controls></video>`;
+                     else if (displayType === 'audio') contentHtml += createAudioHTML(msg.fileUrl);
+                     
+                     // Save button for my own media
+                     contentHtml += `
+                        <a href="#" onclick="forceDownload('${msg.fileUrl}', '${safeFileName}'); return false;" class="save-option">
+                            <i class="fa-solid fa-download"></i> Save
+                        </a>`;
+                } else {
+                    // Placeholder for received media
+                    let icon = 'fa-eye';
+                    let label = 'View';
+                    if (displayType === 'audio') { icon = 'fa-music'; label = 'Play Audio'; }
+                    else if (displayType === 'video') { icon = 'fa-play'; label = 'Play Video'; }
+                    
+                    contentHtml += `
+                        <div class="media-placeholder" onclick="loadMedia(this, '${displayType}', '${msg.fileUrl}', '${safeFileName}')">
+                            <div class="placeholder-icon"><i class="fa-solid ${icon}"></i></div>
+                            <span class="placeholder-text">Tap to ${label}</span>
+                        </div>`;
+                }
+
+            } else if (displayType === 'file') {
+                contentHtml += `
+                    <a href="#" onclick="forceDownload('${msg.fileUrl}', '${safeFileName}'); return false;" class="file-attachment">
+                        <i class="fa-solid fa-file-arrow-down"></i>
+                        <span>${msg.fileName || 'Download File'}</span>
+                    </a>`;
+            }
+
+            // 2. Render Text (Caption) if present
+            // Note: If type is text, msg.text is the main content. 
+            // If type is media, msg.text is the caption.
+            if (msg.text && msg.text.trim() !== '') {
+                // If we have media, add a margin top for caption styling
+                const className = (displayType && displayType !== 'text') ? 'message-caption' : '';
+                contentHtml += `<div class="${className}">${msg.text}</div>`;
+            }
+
+            const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Ticks Logic
+            let tickHtml = '';
+            if (isMe) {
+                const isRead = msg.read;
+                const tickClass = isRead ? 'read' : '';
+                const iconClass = isRead ? 'fa-check-double' : 'fa-check';
+                tickHtml = `<span class="msg-tick ${tickClass}"><i class="fa-solid ${iconClass}"></i></span>`;
+            }
+
+            div.innerHTML = `${contentHtml}<span class="message-time">${time} ${tickHtml}</span>`;
+            chatContainer.appendChild(div);
+        }
+
+        // --- LIVE READ STATUS ---
+        socket.on('messages_read', () => {
+            // Update all my unread ticks to read
+            const myUnreadTicks = document.querySelectorAll('.message.sent .msg-tick:not(.read)');
+            myUnreadTicks.forEach(tick => {
+                tick.classList.add('read');
+                tick.innerHTML = '<i class="fa-solid fa-check-double"></i>';
+            });
+        });
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 50);
+        }
+        
+        msgInput.addEventListener('focus', scrollToBottom);
+
+        // --- SERVICE WORKER REGISTRATION ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Media Cache Active:', reg.scope))
+                    .catch(err => console.log('SW Error:', err));
+            });
+        }
+
+    </script>
+</body>
+</html>

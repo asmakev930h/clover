@@ -1,0 +1,18 @@
+{
+  "name": "clover",
+  "version": "1.0.0",
+  "description": "Haven't decided",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "@huggingface/hub": "^2.7.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "http": "^0.0.1-security",
+    "multer": "^2.0.2",
+    "socket.io": "^4.8.1",
+    "uuid": "^13.0.0"
+  }
+}

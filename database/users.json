@@ -1,0 +1,24 @@
+[
+  {
+    "id": "13dcbdb7-642c-4bb4-80a5-ebc51ab535f0",
+    "fullname": "Arcane Nx",
+    "username": "admin",
+    "email": "bolajiolabode2007@gmail.com",
+    "password": "Taloalob.1",
+    "profileId": "E8HwNTO8",
+    "profileImage": "https://huggingface.co/api-ix/storage/resolve/main/28r5s0v.jpg",
+    "createdAt": "2025-11-24T11:31:20.503Z",
+    "VerifiedBarge": true
+  },
+  {
+    "id": "1f236830-6b2c-4239-9a35-3bf73b5f9f3c",
+    "fullname": "John the ripper",
+    "username": "johnyripper",
+    "email": "johnyripper@gmail.com",
+    "password": "Johnyripper.2",
+    "profileId": "NNB4It4D",
+    "profileImage": "https://huggingface.co/api-ix/storage/resolve/main/JAn9g1k.jpg",
+    "createdAt": "2025-11-24T12:51:13.920Z",
+    "VerifiedBarge": true
+  }
+]

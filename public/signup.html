@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sign Up - Clover</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- RESET & CORE STYLES --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { min-height: 100vh; display: flex; justify-content: center; align-items: center; background-color: #0f0f1a; overflow-x: hidden; overflow-y: auto; padding: 40px 0; position: relative; }
+        body::before { content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, #4F46E5 0%, #7C3AED 30%, #EC4899 60%, #0f0f1a 80%); background-size: 200% 200%; animation: auroraMove 15s ease infinite alternate; opacity: 0.5; z-index: -1; filter: blur(80px); pointer-events: none; }
+        @keyframes auroraMove { 0% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(-10%, 5%) rotate(10deg); } 100% { transform: translate(5%, -10%) rotate(-5deg); } }
+
+        /* --- CUSTOM ALERT --- */
+        .custom-alert { position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-500%); background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); padding: 16px 30px; border-radius: 50px; border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 9999; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; gap: 12px; pointer-events: none; }
+        .custom-alert.show { transform: translateX(-50%) translateY(0); }
+        .custom-alert.error { border-color: rgba(239, 68, 68, 0.5); background: rgba(239, 68, 68, 0.15); }
+        .custom-alert.success { border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.15); }
+
+        /* --- CARD --- */
+        .login-card-container { perspective: 1500px; width: 100%; display: flex; justify-content: center; padding: 20px; }
+        .login-card { width: 100%; max-width: 420px; padding: 40px 30px; border-radius: 40px; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05), 0 20px 40px rgba(0, 0, 0, 0.3); color: #fff; text-align: center; transition: transform 0.1s ease-out; transform-style: preserve-3d; will-change: transform; }
+
+        .brand-wrapper { position: relative; display: inline-block; margin-bottom: 35px; padding-top: 10px; }
+        .brand-aura { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 140px; height: 60px; background: radial-gradient(ellipse at center, rgba(167, 139, 250, 0.3) 0%, rgba(0,0,0,0) 70%); filter: blur(15px); z-index: 0; pointer-events: none; animation: pulseGlow 4s ease-in-out infinite alternate; }
+        @keyframes pulseGlow { 0% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.9); } 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); } }
+        .brand-logo { position: relative; z-index: 1; font-size: 28px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 12px; background: linear-gradient(135deg, #ffffff 10%, #e9d5ff 60%, #c4b5fd 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.5)); }
+        .brand-icon { font-size: 24px; background: linear-gradient(135deg, #fff 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; transform: rotate(-10deg); filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.6)); }
+
+        .login-card h2 { font-weight: 700; font-size: 30px; margin-bottom: 5px; color: #fff; }
+        .login-card p.subtitle { font-size: 13px; color: rgba(255, 255, 255, 0.6); margin-bottom: 25px; }
+
+        /* --- INPUTS --- */
+        .input-group { position: relative; margin-bottom: 15px; text-align: left; }
+        .input-group.password-group { margin-bottom: 5px; }
+        .input-group i.field-icon { position: absolute; top: 50%; left: 20px; transform: translateY(-50%); color: rgba(255, 255, 255, 0.5); font-size: 16px; pointer-events: none; transition: 0.3s; }
+        .input-group input { width: 100%; padding: 16px 50px 16px 50px; border-radius: 50px; border: none; outline: none; background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 16px; font-weight: 400; transition: all 0.3s ease; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1); }
+        .input-group input::placeholder { color: rgba(255, 255, 255, 0.4); }
+        .input-group input:focus { background: rgba(255, 255, 255, 0.15); box-shadow: 0 0 15px rgba(124, 58, 237, 0.3), inset 2px 2px 5px rgba(0,0,0,0.1); }
+        .input-group input:focus + i.field-icon { color: #c4b5fd; }
+        .input-group input.error { border: 1px solid #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+        .toggle-password { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); cursor: pointer; color: rgba(255, 255, 255, 0.5); transition: 0.3s; padding: 5px; }
+        .toggle-password:hover { color: #fff; }
+
+        /* --- FEEDBACK --- */
+        .feedback-container { height: 20px; margin-bottom: 10px; padding: 0 20px; display: flex; align-items: center; justify-content: flex-start; }
+        .strength-bar-bg { width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; display: none; position: relative; }
+        .strength-bar-fill { height: 100%; width: 0%; border-radius: 10px; transition: width 0.3s ease, background-color 0.3s ease; }
+        .feedback-text { font-size: 12px; font-weight: 500; opacity: 0; transition: opacity 0.3s; margin-left: 5px; }
+        .text-weak { color: #ef4444; } .text-medium { color: #f59e0b; } .text-strong { color: #10b981; }
+        .text-match { color: #10b981; } .text-mismatch { color: #ef4444; }
+
+        /* --- BUTTON & SOCIAL --- */
+        .login-btn { width: 100%; padding: 16px; border-radius: 50px; border: none; font-size: 16px; font-weight: 600; color: #fff; cursor: pointer; background: linear-gradient(135deg, #4F46E5, #EC4899); box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4); transition: all 0.3s ease; margin-top: 10px; user-select: none; }
+        .login-btn:hover { background: linear-gradient(135deg, #4338ca, #db2777); transform: translateY(-2px) scale(1.01); box-shadow: 0 15px 30px rgba(124, 58, 237, 0.6); }
+        .divider { margin: 20px 0 15px; display: flex; align-items: center; color: rgba(255, 255, 255, 0.4); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(255, 255, 255, 0.2); }
+        .divider span { margin: 0 10px; }
+        .social-container { display: flex; gap: 15px; margin-bottom: 20px; }
+        .social-btn { flex: 1; height: 50px; border-radius: 50px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.05); color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: all 0.3s ease; }
+        .social-btn:hover { transform: translateY(-2px); border-color: transparent; }
+        .social-btn.google:hover { background-color: #DB4437; box-shadow: 0 5px 15px rgba(219, 68, 55, 0.4); }
+        .social-btn.github:hover { background-color: #111; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); }
+        .links { font-size: 13px; color: rgba(255, 255, 255, 0.6); }
+        .links a { color: #fff; text-decoration: none; font-weight: 600; margin-left: 5px; }
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        @media (max-width: 480px) { .login-card { padding: 30px 20px; } .login-card h2 { font-size: 26px; } }
+    </style>
+</head>
+<body>
+
+    <div id="customAlert" class="custom-alert">
+        <i id="alertIcon" class="fa-solid"></i>
+        <span id="alertMessage"></span>
+    </div>
+
+    <div class="login-card-container">
+        <div class="login-card" id="tiltCard">
+            <div class="brand-wrapper">
+                <div class="brand-aura"></div>
+                <div class="brand-logo"><i class="fa-solid fa-clover brand-icon"></i> CLOVER</div>
+            </div>
+            <h2>Create Account</h2>
+            <p class="subtitle">Join us and start your journey</p>
+
+            <form id="signupForm" autocomplete="off">
+                <div class="input-group">
+                    <input type="text" id="fullname" placeholder="Full Name" autocomplete="name" required>
+                    <i class="fa-regular fa-id-card field-icon"></i>
+                </div>
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="Email Address" autocomplete="email" required>
+                    <i class="fa-regular fa-envelope field-icon"></i>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="username" placeholder="Username" autocomplete="off" required>
+                    <i class="fa-solid fa-at field-icon"></i>
+                </div>
+                <div class="input-group password-group">
+                    <input type="password" id="password" placeholder="Password" autocomplete="new-password" required>
+                    <i class="fa-solid fa-lock field-icon"></i>
+                    <i class="fa-regular fa-eye toggle-password" data-target="password"></i>
+                </div>
+                <div class="feedback-container">
+                    <div class="strength-bar-bg" id="strengthBarBg">
+                        <div class="strength-bar-fill" id="strengthFill"></div>
+                    </div>
+                    <span id="strengthText" class="feedback-text"></span>
+                </div>
+                <div class="input-group password-group">
+                    <input type="password" id="confirm_password" placeholder="Confirm Password" autocomplete="new-password" required>
+                    <i class="fa-solid fa-lock field-icon"></i>
+                    <i class="fa-regular fa-eye toggle-password" data-target="confirm_password"></i>
+                </div>
+                <div class="feedback-container">
+                    <span id="matchText" class="feedback-text"></span>
+                </div>
+                <button type="submit" class="login-btn" id="signupBtn">Sign Up</button>
+            </form>
+
+            <div class="divider"><span>Or sign up with</span></div>
+            <div class="social-container">
+                <button class="social-btn google"><i class="fab fa-google"></i></button>
+                <button class="social-btn github"><i class="fab fa-github"></i></button>
+            </div>
+            <div class="links">Already have an account? <a href="login.html">Log In</a></div>
+        </div>
+    </div>
+
+    <script>
+        if (localStorage.getItem('userId')) window.location.href = '/home';
+
+        // Custom Alert
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('customAlert');
+            const alertMsg = document.getElementById('alertMessage');
+            const alertIcon = document.getElementById('alertIcon');
+            alertBox.className = 'custom-alert'; alertIcon.className = 'fa-solid';
+            alertMsg.innerText = message;
+            if (type === 'error') { alertBox.classList.add('error'); alertIcon.classList.add('fa-circle-exclamation'); }
+            else if (type === 'success') { alertBox.classList.add('success'); alertIcon.classList.add('fa-circle-check'); }
+            requestAnimationFrame(() => alertBox.classList.add('show'));
+            setTimeout(() => alertBox.classList.remove('show'), 3000);
+        }
+
+        // Password Toggle
+        document.querySelectorAll('.toggle-password').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                input.setAttribute('type', input.getAttribute('type') === 'password' ? 'text' : 'password');
+                btn.classList.toggle('fa-eye'); btn.classList.toggle('fa-eye-slash');
+            });
+        });
+
+        // Strength Logic Helper
+        function calculateStrength(val) {
+            let score = 0;
+            if(val.length >= 8) score++; 
+            if(/[0-9]/.test(val)) score++; 
+            if(/[!@#$%^&*]/.test(val)) score++; 
+            if(/[A-Z]/.test(val)) score++; 
+            return score;
+        }
+
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirm_password');
+        const strengthBarBg = document.getElementById('strengthBarBg');
+        const strengthFill = document.getElementById('strengthFill');
+        const strengthText = document.getElementById('strengthText');
+        const matchText = document.getElementById('matchText');
+
+        passwordInput.addEventListener('input', () => {
+            const val = passwordInput.value;
+            if(val.length > 0) { strengthBarBg.style.display = 'block'; strengthText.style.opacity = '1'; }
+            else { strengthBarBg.style.display = 'none'; strengthText.style.opacity = '0'; return; }
+
+            let score = calculateStrength(val);
+
+            if(val.length < 6) {
+                strengthFill.style.width = '20%'; strengthFill.style.backgroundColor = '#ef4444';
+                strengthText.innerText = 'Too Short'; strengthText.className = 'feedback-text text-weak';
+            } else if(score < 3) { 
+                strengthFill.style.width = '60%'; strengthFill.style.backgroundColor = '#f59e0b';
+                strengthText.innerText = 'Medium'; strengthText.className = 'feedback-text text-medium';
+            } else { 
+                strengthFill.style.width = '100%'; strengthFill.style.backgroundColor = '#10b981';
+                strengthText.innerText = 'Strong'; strengthText.className = 'feedback-text text-strong';
+            }
+            checkMatch();
+        });
+
+        confirmInput.addEventListener('input', checkMatch);
+
+        function checkMatch() {
+            const pass = passwordInput.value; const conf = confirmInput.value;
+            if (conf.length === 0) { matchText.style.opacity = '0'; return; }
+            matchText.style.opacity = '1';
+            if (pass === conf) {
+                matchText.innerHTML = '<i class="fa-solid fa-check"></i> Passwords match';
+                matchText.className = 'feedback-text text-match';
+                confirmInput.classList.remove('error');
+            } else {
+                matchText.innerHTML = '<i class="fa-solid fa-xmark"></i> Do not match';
+                matchText.className = 'feedback-text text-mismatch';
+            }
+        }
+
+        // Submit
+        const form = document.getElementById('signupForm');
+        const signupBtn = document.getElementById('signupBtn');
+        const card = document.getElementById('tiltCard');
+        const usernameInput = document.getElementById('username');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            passwordInput.classList.remove('error'); 
+            confirmInput.classList.remove('error');
+            usernameInput.classList.remove('error');
+
+            const fullname = document.getElementById('fullname').value;
+            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value;
+            const password = passwordInput.value;
+            const confirm = confirmInput.value;
+
+            // --- USERNAME CHECKER (NO SPACES) ---
+            if (username.includes(' ')) {
+                card.classList.add('shake');
+                usernameInput.classList.add('error');
+                showAlert('Username cannot contain spaces!', 'error');
+                setTimeout(() => card.classList.remove('shake'), 1000);
+                return;
+            }
+
+            // --- ENFORCE STRONG PASSWORD ---
+            const score = calculateStrength(password);
+            if (password.length < 8 || score < 3) {
+                card.classList.add('shake');
+                passwordInput.classList.add('error');
+                showAlert('Password must be Strong (8+ chars, mix of types)', 'error');
+                setTimeout(() => card.classList.remove('shake'), 1000);
+                return;
+            }
+
+            if (password !== confirm) {
+                card.classList.add('shake'); passwordInput.classList.add('error'); confirmInput.classList.add('error');
+                showAlert('Passwords do not match!', 'error');
+                setTimeout(() => card.classList.remove('shake'), 1000);
+                return;
+            }
+
+            signupBtn.innerText = 'Creating Account...'; signupBtn.style.opacity = '0.8'; signupBtn.disabled = true;
+
+            try {
+                const response = await fetch('/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullname, username, email, password })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    signupBtn.innerText = 'Success!'; signupBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+                    showAlert('Account created successfully!', 'success');
+                    setTimeout(() => window.location.href = '/login', 1500);
+                } else { throw new Error(data.error || 'Registration failed'); }
+            } catch (error) {
+                card.classList.add('shake'); setTimeout(() => card.classList.remove('shake'), 1000);
+                signupBtn.innerText = 'Sign Up'; signupBtn.style.opacity = '1'; signupBtn.disabled = false;
+                showAlert(error.message, 'error');
+            }
+        });
+
+        // Tilt
+        if (window.matchMedia("(pointer: fine)").matches) {
+            document.querySelector('.login-card-container').addEventListener('mousemove', (e) => {
+                const rect = document.querySelector('.login-card-container').getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width/2; const y = e.clientY - rect.top - rect.height/2;
+                card.style.transform = `rotateX(${(y/rect.height)*-15}deg) rotateY(${(x/rect.width)*15}deg)`;
+            });
+            document.querySelector('.login-card-container').addEventListener('mouseleave', () => card.style.transform = `rotateX(0deg) rotateY(0deg)`);
+        }
+    </script>
+</body>
+</html>
